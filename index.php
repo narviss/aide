@@ -11,10 +11,10 @@
             $ip = $_SERVER['REMOTE_ADDR'];
         }
         $bd = new mysqli( 'localhost', 'check_pg', 'check_pg_password' , 'codic') or die("Error");
-	    $result = $bd->query("select (NOW() - time_edit) as time_end from codic.log_ip where ip = '".$ip."' and NOW() - time_edit < 600");
+	    $result = $bd->query("select (NOW() - time_edit) as time_end from codic.log_ip where ip = '".$ip."' and NOW() - time_edit < 120 order by time_edit");
         if($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $error = "Вы можете изменить страницу только через ".intdiv(120 - $row['time_end'],60).' минут '.((120 -$row['time_end'])%60).' секунд!';
+            $error = "Вы можете изменить страницу только через <span class='time-last'>".(120 - $row['time_end']).'</span> секунд!';
         } else {
 			if (isset($_POST['editOurCode'])) {
 				if (abs(strlen($homepage) - strlen($_POST['editOurCode'])) < 101) {
@@ -104,6 +104,18 @@
             });
         }
         $upd = setInterval(updateChecksum, 1000);
+        function updateTime() {
+            var Time = $('.time-last');
+            if(Time.length > 0 && parseInt(Time.text()) > 1) {
+                Time.text(parseInt(Time.text()) - 1);
+            } else {
+                clearInterval($updTime);
+                $('.error').remove();
+            }
+        }
+        if($('.time-last').length > 0) {
+            $updTime = setInterval(updateTime, 1000);
+        }
     </script>
     </body>
     </html>
