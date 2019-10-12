@@ -14,7 +14,7 @@
 	    $result = $bd->query("select (NOW() - time_edit) as time_end from codic.log_ip where ip = '".$ip."' and NOW() - time_edit < 600");
         if($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $error = "Вы можете изменить страницу только через ".intdiv(600 - $row['time_end'],60).' минут '.((600 -$row['time_end'])%60).' секунд!';
+            $error = "Вы можете изменить страницу только через ".intdiv(120 - $row['time_end'],60).' минут '.((120 -$row['time_end'])%60).' секунд!';
         } else {
 			if (isset($_POST['editOurCode'])) {
 				if (abs(strlen($homepage) - strlen($_POST['editOurCode'])) < 101) {
@@ -51,6 +51,9 @@
             .edit-len-color {
                 color: green;
             }
+            .error {
+                color: red;
+            }
         </style>
         <title>Hello, world!</title>
     </head>
@@ -59,12 +62,12 @@
         <form action="index.php?edit=true" method="post">
             <div class="form-group" style="padding: 50px">
                 <b for="editOurCode">
-                    <? if(isset($error)): ?>
-                    <b></b><p style="color: red">
-                        <?=$error?>
+                    <b></b><p class="error">
+						<? if(isset($error)): ?>
+						    <?=$error?>
+						<? endif; ?>
                     </p></b>
-                    <? endif; ?>
-                    <b>Измените что-нибудь на главной странице (Доступно одно изменение с одного IP Адреса раз в 10 минут!)
+                    <b>Измените что-нибудь на главной странице (Доступно одно изменение с одного IP Адреса раз в 2 минуты!)
                         Максимум за один раз можно изменить 100 символов!:
                     <br>
                         Допускается только HTML/JS</b>
@@ -78,7 +81,7 @@
     </center>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script>
@@ -89,7 +92,17 @@
             else
                 $('.edit-len-color').attr('style', 'color: green');
             $('.edit-len').text($lens);
-        })
+        });
+        function updateChecksum() {
+            $.get("checksum.php", function (data) {
+                if (data != '<?=md5($homepage);?>') {
+                    clearInterval($upd);
+                    $('.error').text("Страница изменилась, пожалуйста обновите страницу, чтобы посмотреть изменения!");
+                    alert("Страница изменилась, пожалуйста обновите страницу, чтобы посмотреть изменения!");
+                }
+            });
+        }
+        $upd = setInterval(updateChecksum, 1000);
     </script>
     </body>
     </html>
